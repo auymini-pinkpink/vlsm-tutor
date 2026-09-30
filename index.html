@@ -1,0 +1,214 @@
+ <!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLSM Tutor - Interactive Subnetting & Practice Engine</title>
+    <meta name="description" content="Master Variable Length Subnet Masking (VLSM), IP subnetting, and CCNA concepts with interactive calculators and quizzes.">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#111827', 950: '#030712' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200" id="appBody">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg font-black text-xl shadow-lg shadow-indigo-500/20">/</div>
+                <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">VLSM Tutor</span>
+                <span class="bg-indigo-950 text-indigo-400 border border-indigo-800 text-xs px-2 py-0.5 rounded-full font-medium hidden sm:inline-block">MVP v1.0</span>
+            </div>
+
+            <nav class="flex items-center space-x-1 sm:space-x-2">
+                <button onclick="switchTab('calculator')" id="tab-calculator" class="nav-btn active-nav">
+                    <span class="mr-1">🧮</span> Calc
+                </button>
+                <button onclick="switchTab('teach')" id="tab-teach" class="nav-btn">
+                    <span class="mr-1">📚</span> Teach
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="nav-btn relative">
+                    <span class="mr-1">🎯</span> Practice
+                    <span id="streakBadge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full border-2 border-slate-900">0🔥</span>
+                </button>
+                <button onclick="switchTab('reference')" id="tab-reference" class="nav-btn">
+                    <span class="mr-1">🧠</span> CIDR
+                </button>
+                
+                <div class="h-5 w-px bg-slate-800 mx-1"></div>
+                
+                <button onclick="toggleTheme()" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
+
+        <!-- TAB 1: VLSM CALCULATOR -->
+        <section id="sec-calculator" class="space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 backdrop-blur">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-indigo-400">
+                    <span class="mr-2">⚡</span> VLSM Subnet Generator
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Base Network Address</label>
+                        <input type="text" id="baseIp" value="192.168.1.0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 font-mono text-indigo-300 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Base Prefix Length</label>
+                        <select id="basePrefix" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 font-mono text-indigo-300 focus:outline-none focus:border-indigo-500">
+                            <!-- Options generated dynamically -->
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="calculateVLSM()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-600/30 transition duration-150 transform active:scale-95 flex items-center justify-center">
+                            <span>Calculate Subnets</span>
+                            <span class="ml-2">→</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subnet Requirements List -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Required Subnets & Hosts</label>
+                        <button onclick="addSubnetInput()" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center">
+                            <span class="mr-1">+</span> Add Subnet
+                        </button>
+                    </div>
+                    <div id="subnetInputs" class="space-y-3">
+                        <!-- Dynamic Subnet Row Inputs Inserted Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculation Output Area -->
+            <div id="calcOutput" class="space-y-4">
+                <div class="text-center py-12 text-slate-500 bg-slate-800/20 rounded-2xl border border-dashed border-slate-800">
+                    Enter your base network details and requirements above, then click <span class="text-indigo-400 font-semibold">Calculate</span>.
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: EDUCATIONAL / TEACH ME -->
+        <section id="sec-teach" class="hidden space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
+                <h2 class="text-2xl font-bold mb-2 text-indigo-400">Understanding Variable Length Subnet Masking</h2>
+                <p class="text-slate-300 mb-6">Master VLSM subnetting step-by-step using visual binary calculations.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                        <div class="text-2xl mb-2">1️⃣</div>
+                        <h3 class="font-bold text-white mb-2">Sort Requirements</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Always sort required subnets by host size in descending order (largest requirement first) to maximize address efficiency.</p>
+                    </div>
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                        <div class="text-2xl mb-2">2️⃣</div>
+                        <h3 class="font-bold text-white mb-2">Calculate Power of 2</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Find $2^N - 2 \ge \text{Hosts}$. You add 2 because 1 address is reserved for the Network ID and 1 for the Broadcast address.</p>
+                    </div>
+                    <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+                        <div class="text-2xl mb-2">3️⃣</div>
+                        <h3 class="font-bold text-white mb-2">Allocate Sequentially</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">Assign the prefix, identify the block size, find the next starting network address, and repeat for smaller subnets.</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Octet Binary Visualizer -->
+                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800">
+                    <h3 class="font-bold text-slate-200 mb-4 flex items-center">
+                        <span class="mr-2">🔍</span> Interactive Binary Mask Visualizer
+                    </h3>
+                    <div class="mb-4">
+                        <label class="text-xs text-slate-400 block mb-2">Select CIDR Prefix Slash</label>
+                        <input type="range" id="teachCidrSlider" min="8" max="30" value="24" oninput="updateBinaryVisualizer(this.value)" class="w-full">
+                        <div class="flex justify-between text-xs font-mono text-indigo-400 mt-1">
+                            <span>/8</span>
+                            <span id="sliderCidrVal" class="text-base font-bold">/24</span>
+                            <span>/30</span>
+                        </div>
+                    </div>
+                    <div id="binaryOctets" class="grid grid-cols-4 gap-2 font-mono text-center text-sm">
+                        <!-- Dynamic binary bits rendered here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: PRACTICE QUIZ -->
+        <section id="sec-quiz" class="hidden space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 max-w-3xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-400">CCNA Subnetting Practice Engine</h2>
+                        <p class="text-xs text-slate-400">Test your VLSM and CIDR math speed.</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="quizScore" class="text-2xl font-black text-emerald-400">0</span>
+                        <span class="text-xs text-slate-500 block">Streak Points</span>
+                    </div>
+                </div>
+
+                <div id="quizCard" class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-4">
+                    <!-- Dynamic Question Content -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CIDR REFERENCE CHEAT SHEET -->
+        <section id="sec-reference" class="hidden space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-400">Subnet Mask & CIDR Cheat Sheet</h2>
+                        <p class="text-xs text-slate-400">Quick reference table for subnetting math.</p>
+                    </div>
+                    <input type="text" id="cidrSearch" onkeyup="filterCidrTable()" placeholder="Search /24 or 255.255..." class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-indigo-300 focus:outline-none focus:border-indigo-500 w-full sm:w-64">
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-800">
+                    <table class="w-full text-left font-mono text-sm">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">CIDR Prefix</th>
+                                <th class="p-3">Subnet Mask</th>
+                                <th class="p-3">Wildcard Mask</th>
+                                <th class="p-3">Total IPs</th>
+                                <th class="p-3">Usable Hosts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cidrTableBody" class="divide-y divide-slate-800/60 bg-slate-900/60">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+        <p>Built for CCNA Students and Network Engineers • VLSM Tutor MVP</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
