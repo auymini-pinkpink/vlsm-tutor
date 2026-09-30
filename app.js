@@ -296,5 +296,6 @@ function filterCidrTable() {
 }
 
 function toggleTheme() {
-    document.documentElement.classList.toggle('dark');
+  const isDark = document.body.classList.toggle('dark');
+  document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
 }
