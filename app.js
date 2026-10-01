@@ -1,133 +1,107 @@
-/**
- * Converts IPv4 dotted string to 32-bit unsigned integer
- */
-function ipToLong(ip) {
-  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const subnetRowsContainer = document.getElementById("subnetRows");
+  const btnAddSubnet = document.getElementById("btnAddSubnet");
+  const btnCalculate = document.getElementById("btnCalculate");
 
-/**
- * Converts 32-bit unsigned integer back to IPv4 dotted string
- */
-function longToIp(long) {
-  return [
-    (long >>> 24) & 255,
-    (long >>> 16) & 255,
-    (long >>> 8) & 255,
-    long & 255
-  ].join('.');
-}
-
-/**
- * Adds a new subnet input row
- */
-function addSubnetRow() {
-  const container = document.getElementById('subnetRows');
-  const div = document.createElement('div');
-  div.className = 'subnet-row';
-  div.innerHTML = `
-    <input type="text" placeholder="Subnet Name" />
-    <input type="number" placeholder="Hosts Needed" />
-    <button class="btn-icon btn-remove">🗑</button>
-  `;
-  container.appendChild(div);
-  
-  // Attach removal listener to new row
-  div.querySelector('.btn-remove').addEventListener('click', function() {
-    div.remove();
+  // Add new subnet row
+  btnAddSubnet.addEventListener("click", () => {
+    const row = document.createElement("div");
+    row.className = "subnet-row";
+    row.innerHTML = `
+      <input type="text" class="subnet-name-input" placeholder="Subnet Name" value="LAN_${String.fromCharCode(65 + subnetRowsContainer.children.length)}" />
+      <input type="number" class="subnet-hosts-input" placeholder="Hosts Needed" value="10" />
+      <button class="btn-icon btn-remove" title="Remove Subnet">🗑</button>
+    `;
+    subnetRowsContainer.appendChild(row);
   });
-}
 
-/**
- * Main VLSM Calculation Function
- */
-function calculateVLSM() {
-  const majorNetworkInput = document.getElementById('majorNetwork').value.trim();
-  const [ipStr, cidrStr] = majorNetworkInput.split('/');
-  
-  if (!ipStr || !cidrStr || isNaN(cidrStr)) {
-    alert('Please enter a valid CIDR network (e.g., 192.168.1.0/24)');
-    return;
-  }
-
-  const baseCidr = parseInt(cidrStr, 10);
-  let currentIp = ipToLong(ipStr);
-  const totalCapacity = Math.pow(2, 32 - baseCidr);
-
-  // Read subnets from DOM
-  const rows = document.querySelectorAll('.subnet-row');
-  let subnets = [];
-
-  rows.forEach(row => {
-    const inputs = row.querySelectorAll('input');
-    const name = inputs[0].value.trim() || 'Unnamed';
-    const needed = parseInt(inputs[1].value, 10) || 0;
-    if (needed > 0) {
-      subnets.push({ name, needed });
+  // Remove subnet row handler
+  subnetRowsContainer.addEventListener("click", (e) => {
+    if (e.target.classList.contains("btn-remove")) {
+      e.target.closest(".subnet-row").remove();
     }
   });
 
-  // Sort subnets descending by hosts needed (standard VLSM rule)
-  subnets.sort((a, b) => b.needed - a.needed);
+  // Convert IP string to 32-bit unsigned integer
+  function ipToInt(ip) {
+    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+  }
 
-  let totalAllocatedIps = 0;
-  const resultsTable = document.getElementById('resultsTable');
-  resultsTable.innerHTML = '';
+  // Convert 32-bit unsigned integer to IP string
+  function intToIp(int) {
+    return [
+      (int >>> 24) & 255,
+      (int >>> 16) & 255,
+      (int >>> 8) & 255,
+      int & 255
+    ].join('.');
+  }
 
-  subnets.forEach(subnet => {
-    // Determine block size needed (+2 for Network and Broadcast IP)
-    let hostBits = Math.ceil(Math.log2(subnet.needed + 2));
-    if (hostBits < 2) hostBits = 2; // Minimum /30 prefix size
+  // Calculate VLSM Subnet allocations
+  btnCalculate.addEventListener("click", () => {
+    const majorInput = document.getElementById("majorNetwork").value.trim();
+    const [ipStr, cidrStr] = majorInput.split('/');
+    
+    if (!ipStr || !cidrStr) {
+      alert("Please enter a valid CIDR network prefix (e.g. 192.168.1.0/24)");
+      return;
+    }
 
-    const prefix = 32 - hostBits;
-    const blockSize = Math.pow(2, hostBits);
+    const majorCidr = parseInt(cidrStr, 10);
+    const majorIpInt = ipToInt(ipStr);
+    const totalNetworkCapacity = Math.pow(2, 32 - majorCidr);
 
-    // Calculate IPs
-    const networkAddr = longToIp(currentIp);
-    const firstUsable = longToIp(currentIp + 1);
-    const lastUsable = longToIp(currentIp + blockSize - 2);
-    const broadcastAddr = longToIp(currentIp + blockSize - 1);
-    const usableHosts = blockSize - 2;
+    // Extract subnets from inputs
+    const subnetInputs = Array.from(document.querySelectorAll(".subnet-row"));
+    const subnets = subnetInputs.map(row => ({
+      name: row.querySelector(".subnet-name-input").value || "Subnet",
+      hostsNeeded: parseInt(row.querySelector(".subnet-hosts-input").value, 10) || 0
+    })).filter(s => s.hostsNeeded > 0);
 
-    totalAllocatedIps += blockSize;
+    // Sort subnets descending by hosts needed (VLSM Requirement)
+    subnets.sort((a, b) => b.hostsNeeded - a.hostsNeeded);
 
-    // Render table entry
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${subnet.name}</strong></td>
-      <td>${subnet.needed}</td>
-      <td>${usableHosts} <span class="badge">/${prefix}</span></td>
-      <td>${networkAddr}</td>
-      <td>${firstUsable} - ${lastUsable}</td>
-      <td>${broadcastAddr}</td>
-    `;
-    resultsTable.appendChild(tr);
+    let currentIpInt = majorIpInt;
+    let totalAllocatedIps = 0;
+    const resultsTable = document.getElementById("resultsTable");
+    resultsTable.innerHTML = "";
 
-    // Offset IP address pointer to next block
-    currentIp += blockSize;
-  });
+    subnets.forEach(subnet => {
+      // Find required host bits
+      const hostBits = Math.ceil(Math.log2(subnet.hostsNeeded + 2));
+      const subnetCidr = 32 - hostBits;
+      const allocatedSize = Math.pow(2, hostBits);
 
-  // Render Metric Updates
-  const unassigned = totalCapacity - totalAllocatedIps;
-  const percentage = Math.round((totalAllocatedIps / totalCapacity) * 100);
+      const netAddress = intToIp(currentIpInt);
+      const firstUsable = intToIp(currentIpInt + 1);
+      const lastUsable = intToIp(currentIpInt + allocatedSize - 2);
+      const broadcast = intToIp(currentIpInt + allocatedSize - 1);
 
-  document.getElementById('usedIps').innerText = `${totalAllocatedIps} / ${totalCapacity} IPs Used`;
-  document.getElementById('usedPercentage').innerText = `${percentage}% Capacity`;
-  document.getElementById('totalCapacity').innerText = totalCapacity;
-  document.getElementById('unassignedIps').innerText = unassigned < 0 ? 'Exceeded' : unassigned;
-}
+      totalAllocatedIps += allocatedSize;
 
-// Event Listeners Initialization
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('btnAddSubnet').addEventListener('click', addSubnetRow);
-  document.getElementById('btnCalculate').addEventListener('click', calculateVLSM);
+      // Append row to results table with green styled CSS classes
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="subnet-name">${subnet.name}</td>
+        <td>${subnet.hostsNeeded}</td>
+        <td class="allocated">${allocatedSize - 2} (/${subnetCidr})</td>
+        <td class="network-addr">${netAddress}</td>
+        <td class="usable-range">${firstUsable} - ${lastUsable}</td>
+        <td class="broadcast">${broadcast}</td>
+      `;
+      resultsTable.appendChild(tr);
 
-  // Bind removal handler for initial static rows
-  document.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', function() {
-      this.parentElement.remove();
+      currentIpInt += allocatedSize;
     });
+
+    // Update space allocation metric boxes
+    document.getElementById("usedIps").textContent = `${totalAllocatedIps} / ${totalNetworkCapacity} IPs Used`;
+    const capacityPercent = Math.min(100, Math.round((totalAllocatedIps / totalNetworkCapacity) * 100));
+    document.getElementById("usedPercentage").textContent = `${capacityPercent}% Capacity`;
+    document.getElementById("totalCapacity").textContent = totalNetworkCapacity;
+    document.getElementById("unassignedIps").textContent = Math.max(0, totalNetworkCapacity - totalAllocatedIps);
   });
 
-  // Run calculation on page load
-  calculateVLSM();
+  // Initial calculation trigger
+  btnCalculate.click();
 });
