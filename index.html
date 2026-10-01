@@ -12,116 +12,172 @@
     <!-- Header Navigation -->
     <header>
       <div class="brand">
-        <div class="brand-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
+        <div class="brand-icon">🖧</div>
+        <div>
+          <h1>VLSM Tutor</h1>
+          <span class="subtitle">Subnetting Master Studio</span>
         </div>
-        <h1>
-          VLSM Tutor
-          <span>Subnetting Master Studio</span>
-        </h1>
       </div>
-      
-      <div class="nav-tabs">
-        <button class="active">🧮 Calculator</button>
-        <button>📖 Teach Me</button>
-        <button>🎓 Practice</button>
-        <button>📊 Reference Sheet</button>
-        <button class="streak-pill">🔥 0 Streak</button>
-      </div>
+      <nav class="nav-tabs">
+        <button class="nav-btn active" data-tab="tab-calculator">📊 Calculator</button>
+        <button class="nav-btn" data-tab="tab-teach">📖 Teach Me</button>
+        <button class="nav-btn" data-tab="tab-practice">🎓 Practice</button>
+        <button class="nav-btn" data-tab="tab-reference">📋 Reference Sheet</button>
+      </nav>
+      <div class="streak-badge">🔥 <span id="streakCount">0</span> Streak</div>
     </header>
 
     <div class="main-content">
-      <!-- Network Initialization Card -->
-      <div class="card">
-        <div class="card-title-row">
-          <div class="card-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Network Initialization
+      
+      <!-- TAB 1: CALCULATOR -->
+      <div id="tab-calculator" class="tab-content active">
+        <!-- Input Card -->
+        <section class="card">
+          <h2 class="card-title">⚡ Network Initialization</h2>
+          
+          <div class="form-group">
+            <label for="majorNetwork">MAJOR NETWORK PREFIX</label>
+            <input type="text" id="majorNetwork" value="192.168.1.0/24" placeholder="e.g. 192.168.1.0/24" />
+            <p class="hint">IPv4 address with CIDR mask (/8 to /30)</p>
           </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="majorNetwork">MAJOR NETWORK PREFIX</label>
-          <input type="text" id="majorNetwork" value="192.168.1.0/24" placeholder="e.g. 192.168.1.0/24" />
-          <span class="input-hint">IPv4 address with CIDR mask (/8 - /30)</span>
-        </div>
 
-        <div class="form-group">
-          <div class="subnet-header-row">
-            <label>SUBNET REQUIREMENTS</label>
-            <button class="btn-text" id="btnAddSubnet">+ Add Subnet</button>
+          <div class="form-group">
+            <div class="subnet-header-row">
+              <label>SUBNET REQUIREMENTS</label>
+              <button id="btnAddSubnet" class="btn-text">+ Add Subnet</button>
+            </div>
+            
+            <div id="subnetRows">
+              <div class="subnet-row">
+                <input type="text" class="subnet-name" value="LAN_A" placeholder="Subnet Name" />
+                <input type="number" class="subnet-hosts" value="100" placeholder="Hosts Needed" min="1" />
+                <button class="btn-remove">🗑</button>
+              </div>
+              <div class="subnet-row">
+                <input type="text" class="subnet-name" value="LAN_B" placeholder="Subnet Name" />
+                <input type="number" class="subnet-hosts" value="50" placeholder="Hosts Needed" min="1" />
+                <button class="btn-remove">🗑</button>
+              </div>
+              <div class="subnet-row">
+                <input type="text" class="subnet-name" value="LAN_C" placeholder="Subnet Name" />
+                <input type="number" class="subnet-hosts" value="20" placeholder="Hosts Needed" min="1" />
+                <button class="btn-remove">🗑</button>
+              </div>
+              <div class="subnet-row">
+                <input type="text" class="subnet-name" value="WAN_1" placeholder="Subnet Name" />
+                <input type="number" class="subnet-hosts" value="2" placeholder="Hosts Needed" min="1" />
+                <button class="btn-remove">🗑</button>
+              </div>
+            </div>
           </div>
-          <div id="subnetRows">
-            <div class="subnet-row">
-              <input type="text" class="subnet-name-input" value="LAN_A" placeholder="Subnet Name" />
-              <input type="number" class="subnet-hosts-input" value="560" placeholder="Hosts Needed" />
-              <button class="btn-icon btn-remove" title="Remove Subnet">🗑</button>
-            </div>
-            <div class="subnet-row">
-              <input type="text" class="subnet-name-input" value="LAN_B" placeholder="Subnet Name" />
-              <input type="number" class="subnet-hosts-input" value="250" placeholder="Hosts Needed" />
-              <button class="btn-icon btn-remove" title="Remove Subnet">🗑</button>
-            </div>
-            <div class="subnet-row">
-              <input type="text" class="subnet-name-input" value="LAN_C" placeholder="Subnet Name" />
-              <input type="number" class="subnet-hosts-input" value="150" placeholder="Hosts Needed" />
-              <button class="btn-icon btn-remove" title="Remove Subnet">🗑</button>
-            </div>
-            <div class="subnet-row">
-              <input type="text" class="subnet-name-input" value="WAN_1" placeholder="Subnet Name" />
-              <input type="number" class="subnet-hosts-input" value="2" placeholder="Hosts Needed" />
-              <button class="btn-icon btn-remove" title="Remove Subnet">🗑</button>
-            </div>
-          </div>
-        </div>
 
-        <button class="btn btn-primary" id="btnCalculate">⚡ Calculate VLSM</button>
+          <button id="btnCalculate" class="btn-primary">⚡ Calculate VLSM</button>
+        </section>
+
+        <!-- Allocation Metrics Card -->
+        <section class="card">
+          <h2 class="card-title">📊 Space Allocation</h2>
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div id="usedIps" class="metric-value">0 / 0 IPs Used</div>
+              <div id="usedPercentage" class="metric-label">0% Capacity</div>
+            </div>
+            <div class="metric-box">
+              <div id="totalCapacity" class="metric-value">0</div>
+              <div class="metric-label">Total Capacity</div>
+            </div>
+            <div class="metric-box">
+              <div id="unassignedIps" class="metric-value">0</div>
+              <div class="metric-label">Unassigned IPs</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Results Table Card -->
+        <section class="card">
+          <h2 class="card-title">🟢 Allocation Results</h2>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subnet Name</th>
+                  <th>Needed</th>
+                  <th>Allocated</th>
+                  <th>Network Address</th>
+                  <th>Usable Range</th>
+                  <th>Broadcast</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTable"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
-      <!-- Space Allocation Metrics Card -->
-      <div class="card">
-        <div class="card-title">Space Allocation</div>
-        <div class="metrics-grid">
-          <div class="metric-box">
-            <div class="metric-value" id="usedIps">0 / 0 IPs Used</div>
-            <div class="metric-label" id="usedPercentage">0% Capacity</div>
+      <!-- TAB 2: TEACH ME -->
+      <div id="tab-teach" class="tab-content">
+        <section class="card">
+          <h2 class="card-title">📖 Learn Subnetting & VLSM</h2>
+          <div class="guide-content">
+            <h3>1. What is VLSM?</h3>
+            <p>Variable Length Subnet Masking (VLSM) allows network engineers to divide an IP address space into subnets of different sizes, reducing IP address waste.</p>
+
+            <h3>2. Key Rules for VLSM:</h3>
+            <ul>
+              <li>Always allocate subnets starting with the <strong>largest required host count</strong> down to the smallest.</li>
+              <li>Formula for total IP block size needed: <code>Block Size = 2<sup>Host Bits</sup></code> where Host Bits can fit <code>Needed Hosts + 2</code> (1 for Network ID, 1 for Broadcast ID).</li>
+              <li>CIDR Prefix Formula: <code>/CIDR = 32 - Host Bits</code>.</li>
+            </ul>
           </div>
-          <div class="metric-box">
-            <div class="metric-value" id="totalCapacity">0</div>
-            <div class="metric-label">Total Capacity</div>
-          </div>
-          <div class="metric-box">
-            <div class="metric-value" id="unassignedIps">0</div>
-            <div class="metric-label">Unassigned IPs</div>
-          </div>
-        </div>
+        </section>
       </div>
 
-      <!-- Allocation Results Table Card -->
-      <div class="card">
-        <div class="card-title">Allocation Results</div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Subnet Name</th>
-                <th>Needed</th>
-                <th>Allocated</th>
-                <th>Network Address</th>
-                <th>Usable Range</th>
-                <th>Broadcast</th>
-              </tr>
-            </thead>
-            <tbody id="resultsTable">
-              <!-- Dynamically rendered via app.js -->
-            </tbody>
-          </table>
-        </div>
+      <!-- TAB 3: PRACTICE -->
+      <div id="tab-practice" class="tab-content">
+        <section class="card">
+          <div class="quiz-header">
+            <div>
+              <h2 class="card-title">Subnetting Challenge</h2>
+              <p class="hint">Test your mastery of subnet parameters, usable hosts, and CIDR calculations</p>
+            </div>
+            <div class="score-board">
+              SCORE: <span id="quizScore">0</span> | STREAK: <span id="quizStreak">0</span>
+            </div>
+          </div>
+
+          <div class="practice-box">
+            <span class="badge">PRACTICE QUESTION</span>
+            <h3 id="quizQuestion">Which CIDR prefix is required to accommodate at least 27 usable hosts with minimal waste?</h3>
+            <div id="quizOptions" class="options-grid"></div>
+            <div id="quizFeedback" class="feedback-msg"></div>
+          </div>
+        </section>
       </div>
+
+      <!-- TAB 4: REFERENCE SHEET -->
+      <div id="tab-reference" class="tab-content">
+        <section class="card">
+          <h2 class="card-title">📋 IPv4 CIDR Reference Sheet</h2>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>CIDR</th>
+                  <th>Subnet Mask</th>
+                  <th>Total IPs</th>
+                  <th>Usable Hosts</th>
+                </tr>
+              </thead>
+              <tbody id="referenceTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
     </div>
 
     <footer>
-      VLSM Tutor & Subnetting Engine • Standalone Production Application
+      VLSM Tutor & Subnetting Engine • Production Ready Standalone Application
     </footer>
   </div>
 
